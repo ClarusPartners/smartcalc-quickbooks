@@ -8,4 +8,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Reference Include="Interop.QBFC16">
+      <HintPath>..\..\..\..\..\..\Program Files\Common Files\Intuit\QuickBooks\Interop.QBFC16.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>
