@@ -1,16 +1,29 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
     <RootNamespace>smartcalc_quickbooks</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+    <PackageReference Include="RestSharp" Version="108.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\..\Program Files\Intuit\IDN\QBSDK16.0\samples\qbdt\c-sharp\qbXML\SubscribeAndHandleQBEvent_vs15\SubscribeAndHandleQBEvent.csproj" />
+  </ItemGroup>
 
   <ItemGroup>
     <Reference Include="Interop.QBFC16">
       <HintPath>..\..\..\..\..\..\Program Files\Common Files\Intuit\QuickBooks\Interop.QBFC16.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.QBXMLRP2">
+      <HintPath>..\..\..\..\..\..\Program Files\Common Files\Intuit\QuickBooks\Interop.QBXMLRP2.dll</HintPath>
     </Reference>
   </ItemGroup>
 
