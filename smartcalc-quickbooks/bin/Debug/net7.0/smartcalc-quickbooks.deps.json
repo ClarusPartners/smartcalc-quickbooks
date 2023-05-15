@@ -8,6 +8,7 @@
     ".NETCoreApp,Version=v7.0": {
       "smartcalc-quickbooks/1.0.0": {
         "dependencies": {
+          "AddressParser": "1.0.3",
           "Newtonsoft.Json": "13.0.2",
           "RestSharp": "108.0.3",
           "SubscribeAndHandleQBEvent": "1.0.0",
@@ -16,6 +17,14 @@
         },
         "runtime": {
           "smartcalc-quickbooks.dll": {}
+        }
+      },
+      "AddressParser/1.0.3": {
+        "runtime": {
+          "lib/netstandard2.0/AddressParser.dll": {
+            "assemblyVersion": "1.0.3.0",
+            "fileVersion": "1.0.3.0"
+          }
         }
       },
       "Newtonsoft.Json/13.0.2": {
@@ -62,6 +71,13 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "AddressParser/1.0.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-XfB1lVis+Dw/4PuJRtLPfhwJKkBc+6jhIbizrebpKHSIiAZbxMCt6sk83BaEIIB0+Q6YXzoTeqP8a1FnDT4b3Q==",
+      "path": "addressparser/1.0.3",
+      "hashPath": "addressparser.1.0.3.nupkg.sha512"
     },
     "Newtonsoft.Json/13.0.2": {
       "type": "package",

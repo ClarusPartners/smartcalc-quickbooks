@@ -7,6 +7,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "smartcalc-quickbooks", "sma
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubscribeAndHandleQBEvent", "..\..\..\..\..\Program Files\Intuit\IDN\QBSDK16.0\samples\qbdt\c-sharp\qbXML\SubscribeAndHandleQBEvent_vs15\SubscribeAndHandleQBEvent.csproj", "{868CE953-4142-43E8-B605-A37D6BA94636}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AkuCalcConfiguration", "AkuCalcConfiguration\AkuCalcConfiguration.csproj", "{7E9435EE-CC81-4CAD-BE89-135F1BA8E308}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AkuQBSetup", "AkuQBSetup\AkuQBSetup.csproj", "{46A035DA-FF55-4657-A3BF-546F48FA06B9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +35,22 @@ Global
 		{868CE953-4142-43E8-B605-A37D6BA94636}.Release|Any CPU.Build.0 = Release|Any CPU
 		{868CE953-4142-43E8-B605-A37D6BA94636}.Release|x64.ActiveCfg = Release|x64
 		{868CE953-4142-43E8-B605-A37D6BA94636}.Release|x64.Build.0 = Release|x64
+		{7E9435EE-CC81-4CAD-BE89-135F1BA8E308}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E9435EE-CC81-4CAD-BE89-135F1BA8E308}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E9435EE-CC81-4CAD-BE89-135F1BA8E308}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7E9435EE-CC81-4CAD-BE89-135F1BA8E308}.Debug|x64.Build.0 = Debug|Any CPU
+		{7E9435EE-CC81-4CAD-BE89-135F1BA8E308}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E9435EE-CC81-4CAD-BE89-135F1BA8E308}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E9435EE-CC81-4CAD-BE89-135F1BA8E308}.Release|x64.ActiveCfg = Release|Any CPU
+		{7E9435EE-CC81-4CAD-BE89-135F1BA8E308}.Release|x64.Build.0 = Release|Any CPU
+		{46A035DA-FF55-4657-A3BF-546F48FA06B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46A035DA-FF55-4657-A3BF-546F48FA06B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46A035DA-FF55-4657-A3BF-546F48FA06B9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{46A035DA-FF55-4657-A3BF-546F48FA06B9}.Debug|x64.Build.0 = Debug|Any CPU
+		{46A035DA-FF55-4657-A3BF-546F48FA06B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46A035DA-FF55-4657-A3BF-546F48FA06B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46A035DA-FF55-4657-A3BF-546F48FA06B9}.Release|x64.ActiveCfg = Release|Any CPU
+		{46A035DA-FF55-4657-A3BF-546F48FA06B9}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
