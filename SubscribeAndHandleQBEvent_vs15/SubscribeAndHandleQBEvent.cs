@@ -581,7 +581,7 @@ namespace SmartCalc
             txnEventSubscription.AppendChild(requestXMLDoc.CreateElement("TxnEventOperation")).InnerText = "Delete";
 
             string strRetString = requestXMLDoc.OuterXml;
-            LogXmlData(@"C:\Temp\DataEvent.xml", strRetString);
+            LogXmlData(@"DataEvent.xml", strRetString);
             return strRetString;
 
         }
@@ -648,7 +648,7 @@ namespace SmartCalc
 
 
             string strRetString = requestXMLDoc.OuterXml;
-            LogXmlData(@"C:\Temp\UIExtension.xml", strRetString);
+            LogXmlData(@"UIExtension.xml", strRetString);
             return strRetString;
 
         }
@@ -680,7 +680,7 @@ namespace SmartCalc
 
 
             string strRetString = requestXMLDoc.OuterXml;
-            LogXmlData(@"C:\Temp\Unsubscribe.xml", strRetString);
+            LogXmlData(@"Unsubscribe.xml", strRetString);
             return strRetString;
 
         }
@@ -690,7 +690,9 @@ namespace SmartCalc
         // strFile Name should have complete Path of the file too
         private static void LogXmlData(string strFile, string strXML)
         {
-            System.IO.StreamWriter sw = new System.IO.StreamWriter(strFile);
+            string path = Directory.GetCurrentDirectory();
+            string filepath = Path.Combine(path, strFile);
+            System.IO.StreamWriter sw = new System.IO.StreamWriter(filepath);
             sw.WriteLine(strXML);
             sw.Flush();
             sw.Close();
@@ -739,6 +741,7 @@ namespace SmartCalc
         [STAThread]
         static void Main(string[] args)
         {
+           
 
                 try
                 {
