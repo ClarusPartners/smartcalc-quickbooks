@@ -121,9 +121,8 @@
       <HintPath>..\..\..\..\..\..\..\..\..\Users\KhayyamZubair\source\repos\smartcalc-quickbooks\packages\AddressParser.1.0.3\lib\net461\AddressParser.dll</HintPath>
     </Reference>
     <Reference Include="Interop.QBFC16, Version=16.0.0.1, Culture=neutral, PublicKeyToken=31d8aec643e18259, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Interop.QBFC16.16.0.0.1\lib\Interop.QBFC16.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
-      <HintPath>..\..\..\..\..\..\..\..\Common Files\Intuit\QuickBooks\Interop.QBFC16.dll</HintPath>
     </Reference>
     <Reference Include="Interop.QBXMLRP2">
       <Name>Interop.QBXMLRP2</Name>
