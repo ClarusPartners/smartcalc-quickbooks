@@ -116,7 +116,7 @@ namespace SmartCalc
     {
 
         enum QBSubscriptionType { Data, UI, UIExtension };
-        static string strAppName = "SmartCalc";
+        static string strAppName = "AkuCalc";
 
         // CoInitializeEx() can be used to set the apartment model
         // of individual threads.
@@ -586,7 +586,68 @@ namespace SmartCalc
 
         }
 
+        private static string GetAkuCertExtensionSubscriptionAddXML(string strMenuName)
+        {
+            //Create the qbXML request
+            XmlDocument requestXMLDoc = new XmlDocument();
+            requestXMLDoc.AppendChild(requestXMLDoc.CreateXmlDeclaration("1.0", null, null));
+            requestXMLDoc.AppendChild(requestXMLDoc.CreateProcessingInstruction("qbxml", "version=\"5.0\""));
+            XmlElement qbXML = requestXMLDoc.CreateElement("QBXML");
+            requestXMLDoc.AppendChild(qbXML);
 
+            //subscription Message request
+            XmlElement qbXMLMsgsRq = requestXMLDoc.CreateElement("QBXMLSubscriptionMsgsRq");
+            qbXML.AppendChild(qbXMLMsgsRq);
+
+            //UI Extension Subscription ADD request
+            XmlElement uiExtSubscriptionAddRq = requestXMLDoc.CreateElement("UIExtensionSubscriptionAddRq");
+            qbXMLMsgsRq.AppendChild(uiExtSubscriptionAddRq);
+
+
+            //UI Extension Subscription ADD
+            XmlElement uiExtEventSubscriptionAdd = requestXMLDoc.CreateElement("UIExtensionSubscriptionAdd");
+            uiExtSubscriptionAddRq.AppendChild(uiExtEventSubscriptionAdd);
+
+            //Add Subscription ID
+            uiExtEventSubscriptionAdd.AppendChild(requestXMLDoc.CreateElement("SubscriberID")).InnerText = "{8327c7fc-7f05-41ed-a5b4-b6618bb27bf1}";
+
+            //Add COM CallbackInfo
+            XmlElement comCallbackInfo = requestXMLDoc.CreateElement("COMCallbackInfo");
+            uiExtEventSubscriptionAdd.AppendChild(comCallbackInfo);
+
+            //Appname and CLSID
+            comCallbackInfo.AppendChild(requestXMLDoc.CreateElement("AppName")).InnerText = strAppName;
+            comCallbackInfo.AppendChild(requestXMLDoc.CreateElement("CLSID")).InnerText = "{62447F81-C195-446f-8201-94F0614E49D5}";
+
+
+            //  MenuEventSubscription
+            XmlElement menuExtensionSubscription = requestXMLDoc.CreateElement("MenuExtensionSubscription");
+            uiExtEventSubscriptionAdd.AppendChild(menuExtensionSubscription);
+
+            //Add To menu Item // To Cusomter Menu
+            menuExtensionSubscription.AppendChild(requestXMLDoc.CreateElement("AddToMenu")).InnerText = "Customer";
+
+
+            XmlElement menuItem = requestXMLDoc.CreateElement("MenuItem");
+            menuExtensionSubscription.AppendChild(menuItem);
+
+            //Add Menu Name
+            menuItem.AppendChild(requestXMLDoc.CreateElement("MenuText")).InnerText = strMenuName;
+            menuItem.AppendChild(requestXMLDoc.CreateElement("EventTag")).InnerText = "menu_" + strMenuName;
+
+
+            XmlElement displayCondition = requestXMLDoc.CreateElement("DisplayCondition");
+            menuItem.AppendChild(displayCondition);
+
+            displayCondition.AppendChild(requestXMLDoc.CreateElement("VisibleIf")).InnerText = "HasCustomers";
+            displayCondition.AppendChild(requestXMLDoc.CreateElement("EnabledIf")).InnerText = "HasCustomers";
+
+
+            string strRetString = requestXMLDoc.OuterXml;
+            LogXmlData(@"UIExtension.xml", strRetString);
+            return strRetString;
+
+        }
 
         // This Method return the qbXML for the Adding a UI extension to the customer menu.
         // Event will be received any time the menu is clicked 

@@ -104,8 +104,12 @@ namespace SmartCalc
                 StringBuilder sb = new StringBuilder(strMessage);
                 XmlDocument outputXMLDoc = new XmlDocument();
                 outputXMLDoc.LoadXml(strMessage);
+                using (StreamWriter writer = new StreamWriter(@"C:\Temp\QuickBooksEvent.TXT"))
+                {
+                    writer.WriteLine(strMessage);
+                }
                 //MessageBox.Show("XMLDocumentProcessingStop");
-               // MessageBox.Show(outputXMLDoc.OuterXml);
+                // MessageBox.Show(outputXMLDoc.OuterXml);
                 XmlNodeList qbXMLMsgsRsNodeList = outputXMLDoc.GetElementsByTagName("QBXMLEvents");
                 XmlNode childNode = qbXMLMsgsRsNodeList.Item(0).FirstChild;
                 

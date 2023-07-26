@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -33,55 +34,84 @@ namespace SubscribeAndHandleQBEvent
 
         public SmartCalcHandler()
         {
-            if (File.Exists("config.txt"))
+            var dir = Application.StartupPath;
+            var configPath = Application.StartupPath + @"\config.txt";
+            if (File.Exists(configPath))
             {
-                Taxpayer newtaxpayer = new Taxpayer();
-                using (StreamReader reader = new StreamReader("config.txt"))
+                try
                 {
-                    string line;
-                    while ((line = reader.ReadLine()) != null)
+                    Taxpayer newtaxpayer = new Taxpayer();
+                    using (StreamReader reader = new StreamReader(configPath))
                     {
-                        string[] parts = line.Split('=');
-                        switch (parts[0])
+                        string line;
+                        while ((line = reader.ReadLine()) != null)
                         {
-                            case "Username":
-                                this.username = parts[1];
-                                break;
-                            case "Password":
-                                this.password = parts[1];
-                                break;
-                            case "Endpoint":
-                                this.endpoint = parts[1];
-                                break;
-                            case "Taxpayer":
-                                newtaxpayer.TaxPayerName = parts[1];
-                               break;
-                            case "StreetAddress1":
-                                newtaxpayer.StreetAddress1 = parts[1];
-                                break;
-                            case "StreetAddress2":
-                                newtaxpayer.StreetAddress2 = parts[1];
-                                break;
-                            case "Zip":
-                                newtaxpayer.Zip = parts[1];
-                                break;
-                            case "State":
-                                newtaxpayer.State = parts[1];
-                                break;
-                            case "City":
-                                newtaxpayer.City = parts[1];
-                                break;
-                            case "County":
-                                newtaxpayer.County = parts[1];
-                                break;
-                            case "Country":
-                                newtaxpayer.Country = parts[1];
-                                break;
+                            string[] parts = line.Split('=');
+                            switch (parts[0])
+                            {
+                                case "Username":
+                                    this.username = parts[1];
+                                    break;
+                                case "Password":
+                                    this.password = parts[1];
+                                    break;
+                                case "Endpoint":
+                                    this.endpoint = parts[1];
+                                    break;
+                                case "Taxpayer":
+                                    newtaxpayer.TaxPayerName = parts[1];
+                                    break;
+                                case "StreetAddress1":
+                                    newtaxpayer.StreetAddress1 = parts[1];
+                                    break;
+                                case "StreetAddress2":
+                                    newtaxpayer.StreetAddress2 = parts[1];
+                                    break;
+                                case "Zip":
+                                    newtaxpayer.Zip = parts[1];
+                                    break;
+                                case "State":
+                                    newtaxpayer.State = parts[1];
+                                    break;
+                                case "City":
+                                    newtaxpayer.City = parts[1];
+                                    break;
+                                case "County":
+                                    newtaxpayer.County = parts[1];
+                                    break;
+                                case "Country":
+                                    newtaxpayer.Country = parts[1];
+                                    break;
+                            }
                         }
+                        this.taxpayer = newtaxpayer;
+
                     }
-                    this.taxpayer = newtaxpayer;
                 }
+                catch (Exception ex)
+                {
+                    using (StreamWriter writer = new StreamWriter(@"C:\Temp\TaxpayerCreateException.TXT"))
+                    {
+                        writer.WriteLine(ex.Message);
+                        writer.WriteLine(ex.Data);
+                        writer.WriteLine(ex.InnerException);
+                        writer.WriteLine(ex.StackTrace);
+
+
+
+                    }
+                }
+                
             }
+            else
+            {
+                using (StreamWriter writer = new StreamWriter(@"C:\Temp\ConfigFileNotFound.TXT"))
+                { 
+
+                }
+
+            }
+       
         }
         public string username { get; set; }
         protected string password { get; set; }
@@ -210,7 +240,8 @@ namespace SubscribeAndHandleQBEvent
             XmlDocument xmlResponse = new XmlDocument();
             xmlResponse.LoadXml(response);
             XmlNodeList invoiceNodes = xmlResponse.GetElementsByTagName("InvoiceRet");
-
+            XmlNodeList customerNode = xmlResponse.GetElementsByTagName("CustomerRef");
+            int i = 1;
             foreach (XmlNode invoiceNode in invoiceNodes)
             {
                 XmlNodeList lineNodes = invoiceNode.SelectNodes("InvoiceLineRet");
@@ -219,14 +250,14 @@ namespace SubscribeAndHandleQBEvent
                 {
                     InvoiceLine invoiceLine = new InvoiceLine
                     {
-                        invoice_line = lineNode.SelectSingleNode("ItemRef/ListID")?.InnerText ?? "",
+                        invoice_line = i.ToString(),
                         so_no = invoiceNode.SelectSingleNode("PONumber")?.InnerText ?? "",
                         quantity = decimal.Parse(lineNode.SelectSingleNode("Quantity")?.InnerText ?? "0"),
                         sales_amount = decimal.Parse(lineNode.SelectSingleNode("Amount")?.InnerText ?? "0"),
                         discount_type = lineNode.SelectSingleNode("DiscountLineRet/DiscountLineType")?.InnerText ?? "",
                         discount_value = decimal.Parse(lineNode.SelectSingleNode("DiscountLineRet/DiscountLineAmount")?.InnerText ?? "0"),
                         sales_tax_invoice = decimal.Parse(lineNode.SelectSingleNode("SalesTaxLineRet/SalesTaxPercent")?.InnerText ?? "0"),
-                        destination_street = invoiceNode.SelectSingleNode("ShipAddress/Addr1")?.InnerText ?? "",
+                        destination_street = (invoiceNode.SelectSingleNode("ShipAddress/Addr1").InnerText == customerNode[0].SelectSingleNode("FullName").InnerText)? invoiceNode.SelectSingleNode("ShipAddress/Addr1").InnerText : invoiceNode.SelectSingleNode("ShipAddress/Addr2").InnerText,
                         destination_city = invoiceNode.SelectSingleNode("ShipAddress/City")?.InnerText ?? "",
                         destination_state = invoiceNode.SelectSingleNode("ShipAddress/State")?.InnerText ?? "",
                         destination_zip = invoiceNode.SelectSingleNode("ShipAddress/PostalCode")?.InnerText ?? "",
@@ -241,6 +272,7 @@ namespace SubscribeAndHandleQBEvent
                     };
 
                     invoiceLines.Add(invoiceLine);
+                    i++;
                 }
             }
 
@@ -319,7 +351,7 @@ namespace SubscribeAndHandleQBEvent
                         {
                             taxpayer = this.taxpayer,
                             customer_no = invoiceNodes[0].SelectSingleNode("ListID")?.InnerText??"",
-                            invoice_no = xmlResponse.SelectSingleNode("RefNumber")?.InnerText??Guid.NewGuid().ToString(),
+                            invoice_no = xmlResponse.GetElementsByTagName("RefNumber")[0].InnerText??Guid.NewGuid().ToString(),
                             invoice_date = DateTime.Now.ToString("MM/dd/yyyy"),
                             transaction_date = DateTime.Now.ToString("MM/dd/yyyy"),
                             document_type = "SI",
@@ -329,7 +361,7 @@ namespace SubscribeAndHandleQBEvent
                             origin_zip = taxpayer.Zip,
                             origin_county = taxpayer.County,
                             origin_country = taxpayer.Country,
-                            shipping_amt = "0"
+                            shipping_amt = ""
                         },
                         invoice_line = JsonConvert.SerializeObject(ParseInvoiceResponse(invoice))
             
@@ -382,7 +414,7 @@ namespace SubscribeAndHandleQBEvent
                     writer.WriteLine("INVOICE CHECK**********");
                     writer.WriteLine(invoice);
                 }
-
+               
                 try
                 {
 
@@ -454,16 +486,16 @@ namespace SubscribeAndHandleQBEvent
                         {
                             taxpayer =taxpayer.TaxPayerName,
                             customer_no = invoiceNodes[0].SelectSingleNode("ListID")?.InnerText ?? "",
-                            invoice_no = Guid.NewGuid().ToString(),
+                            invoice_no = xmlResponse.GetElementsByTagName("RefNumber")[0].InnerText ?? Guid.NewGuid().ToString(),
                             invoice_date = DateTime.Now.ToString("MM/dd/yyyy"),
                             transaction_date = DateTime.Now.ToString("MM/dd/yyyy"),
                             document_type = "SI",
                             origin_street = taxpayer.StreetAddress1 ?? "",
                             origin_city = taxpayer.City ?? "",
-                            origin_state = taxpayer.State,
-                            origin_zip = taxpayer.Zip,
-                            origin_county = taxpayer.County,
-                            origin_country = taxpayer.Country,
+                            origin_state = taxpayer.State ?? "",
+                            origin_zip = taxpayer.Zip ?? "",
+                            origin_county = taxpayer.County ?? "",
+                            origin_country = taxpayer.Country ?? "",
                             shipping_amt = "0"
                         },
                         invoice_line = ParseInvoiceResponse(invoice)
@@ -496,7 +528,11 @@ namespace SubscribeAndHandleQBEvent
                 catch (Exception ex)
                 {
 
-                    //Console.WriteLine("Error: " + ex.Message + " GetSalesTaxFromSmartCalc(string invoice) ");
+                    using (StreamWriter writer = new StreamWriter(@"C:\Temp\ExceptionInTaxCalc.TXT"))
+                    {
+                        
+                        writer.WriteLine(ex.Message.ToString());
+                    }
                     return 0m;
                 }
             }

@@ -540,6 +540,91 @@ public class SmartCalcConnect
                     csvData.Add(row);
                 }
             }
+            var xml = @"<?xml version=""1.0"" ?>
+<QBXML>
+<QBXMLMsgsRs>
+<InvoiceQueryRs requestID=""1"" statusCode=""0"" statusSeverity=""Info"" statusMessage=""Status OK"">
+<InvoiceRet>
+<TxnID>3379E-1797338703</TxnID>
+<TimeCreated>2026-12-15T07:45:03-05:00</TimeCreated>
+<TimeModified>2026-12-15T07:45:03-05:00</TimeModified>
+<EditSequence>1797338703</EditSequence>
+<TxnNumber>2578</TxnNumber>
+<CustomerRef>
+<ListID>80000-852380792</ListID>
+<FullName>Campbell, Heather</FullName>
+</CustomerRef>
+<ARAccountRef>
+<ListID>4A0000-852369473</ListID>
+<FullName>Accounts Receivable</FullName>
+</ARAccountRef>
+<TemplateRef>
+<ListID>10000-852029220</ListID>
+<FullName>Intuit Product Invoice</FullName>
+</TemplateRef>
+<TxnDate>2026-12-15</TxnDate>
+<RefNumber>TEST1224</RefNumber>
+<BillAddress>
+<Addr1>Heather Campbell</Addr1>
+<Addr2>2950 Harley Ave.</Addr2>
+<City>Middlefield</City>
+<State>CA</State>
+<PostalCode>94482</PostalCode>
+</BillAddress>
+<ShipAddress>
+<Addr1>Heather Campbell</Addr1>
+<Addr2>2950 Harley Ave.</Addr2>
+<City>Middlefield</City>
+<State>CA</State>
+<PostalCode>94482</PostalCode>
+</ShipAddress>
+<IsPending>false</IsPending>
+<IsFinanceCharge>false</IsFinanceCharge>
+<TermsRef>
+<ListID>40000-852029282</ListID>
+<FullName>Due on receipt</FullName>
+</TermsRef>
+<DueDate>2026-12-15</DueDate>
+<ShipDate>2026-12-15</ShipDate>
+<Subtotal>0.00</Subtotal>
+<ItemSalesTaxRef>
+<ListID>8000003D-1797361823</ListID>
+<FullName>Tax Calculated on Invoice</FullName>
+</ItemSalesTaxRef>
+<SalesTaxPercentage>0.00</SalesTaxPercentage>
+<SalesTaxTotal>0.00</SalesTaxTotal>
+<AppliedAmount>0.00</AppliedAmount>
+<BalanceRemaining>0.00</BalanceRemaining>
+<IsPaid>true</IsPaid>
+<IsToBePrinted>false</IsToBePrinted>
+<CustomerSalesTaxCodeRef>
+<ListID>10000-1004660652</ListID>
+<FullName>Tax</FullName>
+</CustomerSalesTaxCodeRef>
+<InvoiceLineRet>
+<TxnLineID>337A0-1797338703</TxnLineID>
+<ItemRef>
+<ListID>320001-973085832</ListID>
+<FullName>01 Plans &amp; Permits  .:01.3 City &amp; Co. Lic&apos;s &amp; Fees</FullName>
+</ItemRef>
+<Desc>City &amp; County Licenses &amp; Fees</Desc>
+<Quantity>3</Quantity>
+<Rate>0.00</Rate>
+<Amount>0.00</Amount>
+<SalesTaxCodeRef>
+<ListID>20000-1004660652</ListID>
+<FullName>Non</FullName>
+</SalesTaxCodeRef>
+</InvoiceLineRet>
+</InvoiceRet>
+</InvoiceQueryRs>
+</QBXMLMsgsRs>
+</QBXML>
+";
+
+            XmlDocument xmlResponse = new XmlDocument();
+            xmlResponse.LoadXml(xml);
+            var invoice_no = xmlResponse.GetElementsByTagName("RefNumber")[0].InnerText;
             try
             {
 
