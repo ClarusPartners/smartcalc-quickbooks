@@ -11,6 +11,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Web;
 using System.Windows.Forms;
 using System.Xml;
 
@@ -244,7 +245,16 @@ namespace SubscribeAndHandleQBEvent
             int i = 1;
             foreach (XmlNode invoiceNode in invoiceNodes)
             {
+                string dest_street;
                 XmlNodeList lineNodes = invoiceNode.SelectNodes("InvoiceLineRet");
+                if (invoiceNode.SelectSingleNode("ShipAddress/Addr1").InnerText != customerNode[0].SelectSingleNode("FullName").InnerText)
+                {
+                    dest_street = invoiceNode.SelectSingleNode("ShipAddress/Addr1").InnerText;
+                }
+                else
+                {
+                    dest_street = invoiceNode.SelectSingleNode("ShipAddress/Addr2").InnerText;
+                }
 
                 foreach (XmlNode lineNode in lineNodes)
                 {
@@ -257,7 +267,8 @@ namespace SubscribeAndHandleQBEvent
                         discount_type = lineNode.SelectSingleNode("DiscountLineRet/DiscountLineType")?.InnerText ?? "",
                         discount_value = decimal.Parse(lineNode.SelectSingleNode("DiscountLineRet/DiscountLineAmount")?.InnerText ?? "0"),
                         sales_tax_invoice = decimal.Parse(lineNode.SelectSingleNode("SalesTaxLineRet/SalesTaxPercent")?.InnerText ?? "0"),
-                        destination_street = (invoiceNode.SelectSingleNode("ShipAddress/Addr1").InnerText == customerNode[0].SelectSingleNode("FullName").InnerText)? invoiceNode.SelectSingleNode("ShipAddress/Addr1").InnerText : invoiceNode.SelectSingleNode("ShipAddress/Addr2").InnerText,
+                        destination_street = dest_street,
+                     //   destination_street = "123 abc st."+ customerNode[0].SelectSingleNode("FullName").InnerText,
                         destination_city = invoiceNode.SelectSingleNode("ShipAddress/City")?.InnerText ?? "",
                         destination_state = invoiceNode.SelectSingleNode("ShipAddress/State")?.InnerText ?? "",
                         destination_zip = invoiceNode.SelectSingleNode("ShipAddress/PostalCode")?.InnerText ?? "",
@@ -271,6 +282,10 @@ namespace SubscribeAndHandleQBEvent
                         usage_code = lineNode.SelectSingleNode("SalesItemLineRet/ItemRef/ListID")?.InnerText ?? "",
                     };
 
+                    using (StreamWriter writer = new StreamWriter(@"C:\Temp\AfterInvoiceLine.TXT"))
+                    {
+                        writer.WriteLine(response);
+                    }
                     invoiceLines.Add(invoiceLine);
                     i++;
                 }
@@ -376,8 +391,7 @@ namespace SubscribeAndHandleQBEvent
                         writer.WriteLine(invoicequeryURL);
                     }
                     RestResponse INVresponse = invoiceClient.Execute(request);
-                    //Console.WriteLine(INVresponse.Content);
-                    var document = JsonDocument.Parse(INVresponse.Content);
+                     var document = JsonDocument.Parse(INVresponse.Content);
                     using (StreamWriter writer = new StreamWriter(@"C:\Temp\InvrespJson.TXT"))
                     {
                         writer.WriteLine(document.ToString());
@@ -501,10 +515,13 @@ namespace SubscribeAndHandleQBEvent
                         invoice_line = ParseInvoiceResponse(invoice)
 
                     };
-
-                    string invoiceJson = JsonConvert.SerializeObject(jsonObject, Newtonsoft.Json.Formatting.Indented);
+                    using (StreamWriter writer = new StreamWriter(@"C:\Temp\AfterJSONCreation.TXT"))
+                    {
+                        writer.WriteLine(jsonObject.ToString());
+                    }
+                    string invoiceJson = HttpUtility.UrlEncode(JsonConvert.SerializeObject(jsonObject, Newtonsoft.Json.Formatting.Indented));
                     //Console.WriteLine(invoiceJson);
-                    var invoicequeryURL = String.Format(baseURI, "tax_calculation", "JSON", "JSON", invoiceJson);
+                    var invoicequeryURL =String.Format(baseURI, "tax_calculation", "JSON", "JSON", invoiceJson);
                     using (StreamWriter writer = new StreamWriter(@"C:\Temp\SCRespURL.TXT"))
                     {
                         writer.WriteLine(invoicequeryURL);
