@@ -1,6 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using Interop.QBFC16;
+using Interop.QBFC15;
 using System.Net.Sockets;
 using Interop.QBXMLRP2;
 using System.Xml;
@@ -12,7 +12,7 @@ using smartcalc_quickbooks;
 using Newtonsoft.Json;
 using RestSharp;
 using System.Text.Json;
-using SmartCalc;
+using smartcalc_quickbooks;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 
@@ -28,7 +28,7 @@ public class SmartCalcConnect
     private static string ticket;
     private static string companyFile = "";
     private static QBFileMode mode = QBFileMode.qbFileOpenDoNotCare;
-    private static ConcurrentQueue<SmartCalcEvent> eventQueue = new ConcurrentQueue<SmartCalcEvent>();
+   // private static ConcurrentQueue<SmartCalcEvent> eventQueue = new ConcurrentQueue<SmartCalcEvent>();
     private static CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
     enum QBSubscriptionType { Data, UI, UIExtension };
 
@@ -105,13 +105,15 @@ public class SmartCalcConnect
         listEventSubscription.AppendChild(requestXMLDoc.CreateElement("ListEventOperation")).InnerText = "Delete";
 
         string strRetString = requestXMLDoc.OuterXml;
-        LogXmlData(@"C:\Temp\DataEvent.xml", strRetString);
+        LogXmlData(@"DataEvent.xml", strRetString);
         return strRetString;
 
     }
     private static void LogXmlData(string strFile, string strXML)
     {
-        System.IO.StreamWriter sw = new System.IO.StreamWriter(strFile);
+        var dir = System.IO.Directory.GetCurrentDirectory();
+        var filepath = Path.Combine(dir, strFile);
+        System.IO.StreamWriter sw = new System.IO.StreamWriter(filepath);
         sw.WriteLine(strXML);
         sw.Flush();
         sw.Close();
@@ -174,7 +176,7 @@ public class SmartCalcConnect
 
 
         string strRetString = requestXMLDoc.OuterXml;
-        LogXmlData(@"C:\Temp\UIExtension.xml", strRetString);
+        LogXmlData(@"UIExtension.xml", strRetString);
         return strRetString;
 
     }
@@ -514,71 +516,119 @@ public class SmartCalcConnect
     }
     public static async Task Main(string[] args)
     {
+        List<Dictionary<string, string>> csvData = new List<Dictionary<string, string>>();
+         
         using (var tclient = new HttpClient())
         {
             // Set the base address of the API
             tclient.BaseAddress = new Uri("http://mswsmartcalc.suchimsapps.com/");
-
-            try
+            using (StreamReader reader = new StreamReader("transactiondata.csv"))
             {
-                var baseURI = "http://mswsmartcalc.suchimsapps.com/service/v4_1/rest.php?method={0}&input_type={1}&response_type={2}&rest_data={3}";
-                var userJson = new { user_auth = new { user_name = "qbapi", password = "f15df058bee598625a2762554488d903", version = "1", application_name = "Smart-Calc" } };
-                var authCredentials = JsonConvert.SerializeObject(userJson);
-                //   var auth = "{\"user_auth\":{\"user_name\":\"qbapi\",\"password\":\"f15df058bee598625a2762554488d903\",\"version\":\"1\"},\"application_name\":\"Smart-Calc\",\"name_value_list\":[\"user_id\"]}";
-                var authURL = String.Format(baseURI, "auth_token", "JSON", "JSON", authCredentials);
+                // Read the header line
+                string[] headers = reader.ReadLine().Split(',');
 
-                // var rclient = new RestClient("http://mswsmartcalc.suchimsapps.com/service/v4_1/rest.php?method=auth_token&input_type=JSON&response_type=JSON&rest_data={\"user_auth\":{\"user_name\":\"qbapi\",\"password\":\"f15df058bee598625a2762554488d903\",\"version\":\"1\"},\"application_name\":\"Smart-Calc\",\"name_value_list\":[\"user_id\"]}");
-                var rclient = new RestClient(authURL);
-                //  rclient.Timeout = -1; 
-                var request = new RestRequest();
-
-                request.AddHeader("Content-Type", "application/json");
-                request.AddHeader("Cookie", "PHPSESSID=9bf6bngk1aspih5op58pnqte45");
-                //  var body = @"{" + "\n" + @"    ""method"":""login""," + "\n" + @"  ""input_type"":""JSON""," + "\n" + @"  ""response_type"":""JSON"", " + "\n" + @"}";
-                //   request.AddParameter("application/json", body, ParameterType.RequestBody);
-                RestResponse response = rclient.Execute(request);
-                //Console.WriteLine(response.Content);
-                using (StreamWriter writer = new StreamWriter(Path.Combine(Path.GetTempPath(), $"TESTRESPONSE.txt")))
+                while (!reader.EndOfStream)
                 {
-                    writer.WriteLine(authURL);
-                    writer.WriteLine(response.StatusCode);
-                    writer.WriteLine(response.Headers);
-                    writer.WriteLine(response.Content);
+                    string[] values = reader.ReadLine().Split(',');
+                    Dictionary<string, string> row = new Dictionary<string, string>();
 
+                    for (int i = 0; i < headers.Length; i++)
+                    {
+                        row.Add(headers[i], values[i]);
+                    }
+
+                    csvData.Add(row);
                 }
             }
-            catch (Exception ex)
-            {
-                //Console.WriteLine("Error: " + ex.Message);
-            }
-            using (StreamWriter writer = new StreamWriter(Path.Combine(Path.GetTempPath(), $"MainSC.txt")))
-            {
-                writer.WriteLine("AYE");
-            }
+            var xml = @"<?xml version=""1.0"" ?>
+<QBXML>
+<QBXMLMsgsRs>
+<InvoiceQueryRs requestID=""1"" statusCode=""0"" statusSeverity=""Info"" statusMessage=""Status OK"">
+<InvoiceRet>
+<TxnID>3379E-1797338703</TxnID>
+<TimeCreated>2026-12-15T07:45:03-05:00</TimeCreated>
+<TimeModified>2026-12-15T07:45:03-05:00</TimeModified>
+<EditSequence>1797338703</EditSequence>
+<TxnNumber>2578</TxnNumber>
+<CustomerRef>
+<ListID>80000-852380792</ListID>
+<FullName>Campbell, Heather</FullName>
+</CustomerRef>
+<ARAccountRef>
+<ListID>4A0000-852369473</ListID>
+<FullName>Accounts Receivable</FullName>
+</ARAccountRef>
+<TemplateRef>
+<ListID>10000-852029220</ListID>
+<FullName>Intuit Product Invoice</FullName>
+</TemplateRef>
+<TxnDate>2026-12-15</TxnDate>
+<RefNumber>TEST1224</RefNumber>
+<BillAddress>
+<Addr1>Heather Campbell</Addr1>
+<Addr2>2950 Harley Ave.</Addr2>
+<City>Middlefield</City>
+<State>CA</State>
+<PostalCode>94482</PostalCode>
+</BillAddress>
+<ShipAddress>
+<Addr1>Heather Campbell</Addr1>
+<Addr2>2950 Harley Ave.</Addr2>
+<City>Middlefield</City>
+<State>CA</State>
+<PostalCode>94482</PostalCode>
+</ShipAddress>
+<IsPending>false</IsPending>
+<IsFinanceCharge>false</IsFinanceCharge>
+<TermsRef>
+<ListID>40000-852029282</ListID>
+<FullName>Due on receipt</FullName>
+</TermsRef>
+<DueDate>2026-12-15</DueDate>
+<ShipDate>2026-12-15</ShipDate>
+<Subtotal>0.00</Subtotal>
+<ItemSalesTaxRef>
+<ListID>8000003D-1797361823</ListID>
+<FullName>Tax Calculated on Invoice</FullName>
+</ItemSalesTaxRef>
+<SalesTaxPercentage>0.00</SalesTaxPercentage>
+<SalesTaxTotal>0.00</SalesTaxTotal>
+<AppliedAmount>0.00</AppliedAmount>
+<BalanceRemaining>0.00</BalanceRemaining>
+<IsPaid>true</IsPaid>
+<IsToBePrinted>false</IsToBePrinted>
+<CustomerSalesTaxCodeRef>
+<ListID>10000-1004660652</ListID>
+<FullName>Tax</FullName>
+</CustomerSalesTaxCodeRef>
+<InvoiceLineRet>
+<TxnLineID>337A0-1797338703</TxnLineID>
+<ItemRef>
+<ListID>320001-973085832</ListID>
+<FullName>01 Plans &amp; Permits  .:01.3 City &amp; Co. Lic&apos;s &amp; Fees</FullName>
+</ItemRef>
+<Desc>City &amp; County Licenses &amp; Fees</Desc>
+<Quantity>3</Quantity>
+<Rate>0.00</Rate>
+<Amount>0.00</Amount>
+<SalesTaxCodeRef>
+<ListID>20000-1004660652</ListID>
+<FullName>Non</FullName>
+</SalesTaxCodeRef>
+</InvoiceLineRet>
+</InvoiceRet>
+</InvoiceQueryRs>
+</QBXMLMsgsRs>
+</QBXML>
+";
 
-            RequestProcessor2 qbRequestProcessor;
+            XmlDocument xmlResponse = new XmlDocument();
+            xmlResponse.LoadXml(xml);
+            var invoice_no = xmlResponse.GetElementsByTagName("RefNumber")[0].InnerText;
             try
             {
 
-                // Get an instance of the qbXMLRP Request Processor and
-                // call OpenConnection if that has not been done already.
-                qbRequestProcessor = new RequestProcessor2();
-                // string appName;
-                qbRequestProcessor.OpenConnection("", "SmartCalc");
-                string ticket = qbRequestProcessor.BeginSession("", (QBFileMode)ENOpenMode.omDontCare);
-
-
-                StringBuilder strRequest = new StringBuilder();
-                var path = Path.Combine(Path.GetTempPath(), $"QBGeneratedInvoices.txt");
-                strRequest = strRequest.Append("<?xml version=\"1.0\"?>\r\n<?qbxml version=\"5.0\"?>\r\n<QBXML>\r\n\t<QBXMLMsgsRq onError=\"stopOnError\">\r\n\t\t<InvoiceQueryRq requestID=\"1\">\r\n\t\t\t<RefNumber>1100</RefNumber>\r\n\t\t <IncludeLineItems >true</IncludeLineItems>\r\n\t\t  </InvoiceQueryRq>\r\n\t</QBXMLMsgsRq>\r\n</QBXML>\r\n");
-
-                var xms = strRequest.ToString();
-                string strResponse = qbRequestProcessor.ProcessRequest(ticket, strRequest.ToString());
-                using (StreamWriter writer = new StreamWriter(Path.Combine(Path.GetTempPath(), $"QBGeneratedtESInvoices.txt")))
-                {
-                    writer.WriteLine(strResponse);
-                }
-                qbRequestProcessor.EndSession(ticket);
+              
 
                 using (var client = new HttpClient())
                 {
@@ -649,12 +699,7 @@ public class SmartCalcConnect
                 }
             };
                         List<InvoiceLine> invoiceLines = new List<InvoiceLine>();
-                        XmlDocument xmlResponse = new XmlDocument();
-                        xmlResponse.LoadXml(strResponse);
-                        XmlNodeList invoiceNodes = xmlResponse.GetElementsByTagName("CustomerRef");
-                        var customer_no = invoiceNodes[0].SelectSingleNode("ListID").InnerText;
-                        var invoice_no = xmlResponse.SelectSingleNode("//QBXML/QBXMLMsgsRs/InvoiceQueryRs/InvoiceRet/TxnID").InnerText;
-                        var txnID = xmlResponse.SelectSingleNode("//QBXML/QBXMLMsgsRs/InvoiceQueryRs/InvoiceRet/TxnID").InnerText;
+                       
                         var jsonObject = new
                         {
                             session = authentication_token,
@@ -663,8 +708,8 @@ public class SmartCalcConnect
                             invoice_general = new
                             {
                                 taxpayer = "MSW Consulting LLC",
-                                customer_no = invoiceNodes[0].SelectSingleNode("ListID").InnerText,
-                                invoice_no = xmlResponse.SelectSingleNode("//QBXML/QBXMLMsgsRs/InvoiceQueryRs/InvoiceRet/TxnID").InnerText,
+                                customer_no ="3333",
+                                invoice_no ="1234567" ,
                                 invoice_date = DateTime.Now.ToString("MM/dd/yyyy"),
                                 transaction_date = DateTime.Now.ToString("MM/dd/yyyy"),
                                 document_type = "SI",
@@ -676,7 +721,7 @@ public class SmartCalcConnect
                                 origin_country = "United States",
                                 shipping_amt = "0"
                             },
-                            invoice_line = ParseInvoiceResponse(strResponse)
+                            invoice_line = backup
                         };
 
                         string invoiceJson = JsonConvert.SerializeObject(jsonObject, Newtonsoft.Json.Formatting.Indented);
@@ -687,21 +732,8 @@ public class SmartCalcConnect
                         //Console.WriteLine(INVresponse.Content);
                         var document = JsonDocument.Parse(INVresponse.Content);
                         var tax = document.RootElement.GetProperty("summary").GetProperty("total_sales_tax").GetDecimal();
-                        //Console.WriteLine(tax);
-                        var taxRate = "<?qbxml version=\"5.0\"?>\r\n<QBXML>\r\n   <QBXMLMsgsRq onError=\"stopOnError\">\r\n      <ItemSalesTaxAddRq>\r\n         <ItemSalesTaxAdd> \r\n            <Name>SmartCalc</Name> \r\n            <IsActive>true</IsActive> \r\n            <ItemDesc>Tax Rate Calculated by SmartCalc by Clarus Partners</ItemDesc> \r\n      <TaxRate>{0}</TaxRate>\r\n  <TaxVendorRef>\r\n               <FullName>Clarus</FullName>\r\n            </TaxVendorRef>\r\n                  </ItemSalesTaxAdd>\r\n      </ItemSalesTaxAddRq>\r\n   </QBXMLMsgsRq>\r\n</QBXML>";
-
-                        var xml = "<?xml version=\"1.0\"?><?qbxml version=\"5.0\"?><QBXML>\r\n <QBXMLMsgsRq onError=\"stopOnError\">\r\n   <InvoiceModRq requestID=\"1\">\r\n     <InvoiceMod>\r\n       <TxnID>{0}</TxnID>\r\n       \t<EditSequence>1734301998</EditSequence> \r\n       \t<ItemSalesTaxRef>\r\n       \t   <FullName>Tax Calculated on Invoice</FullName>\r\n       \t</ItemSalesTaxRef>\r\n       \t<InvoiceLineMod>\r\n       \t<TxnLineID>2B24F-1734291765</TxnLineID>\r\n       \t</InvoiceLineMod> \r\n       \t<InvoiceLineMod>\r\n       \t<TxnLineID >-1</TxnLineID>\r\n       \t <ItemRef> <!-- optional -->\r\n                <FullName >SmartCalc</FullName> <!-- optional -->\r\n            </ItemRef>\r\n                        <Amount >{1}</Amount>\r\n       </InvoiceLineMod>      \r\n     </InvoiceMod>\r\n   </InvoiceModRq>\r\n </QBXMLMsgsRq></QBXML>";
-                        var addInvoiceLineXml = "<?xml version=\"1.0\"?>\r\n<?qbxml version=\"5.0\"?>\r\n<QBXML>\r\n   <QBXMLMsgsRq onError=\"stopOnError\">\r\n      <InvoiceAddRq>\r\n         <InvoiceAdd>\r\n            <TxnID>{0}</TxnID>\r\n            <InvoiceLineAdd>\r\n               <ItemRef>\r\n                  <FullName>SmartCalc</FullName>\r\n               </ItemRef>\r\n               <Desc>Tax Rate Calculated by SmartCalc by Clarus Partners</Desc>\r\n               <Quantity>1</Quantity>\r\n               <Rate>{1}</Rate>\r\n            </InvoiceLineAdd>\r\n         </InvoiceAdd>\r\n      </InvoiceAddRq>\r\n   </QBXMLMsgsRq>\r\n</QBXML>";
-                        var rxml = String.Format(addInvoiceLineXml, txnID, tax);
-
-
-                        string updateTicket = qbRequestProcessor.BeginSession("", (QBFileMode)ENOpenMode.omDontCare);
-                        string taxResponseUpdate = qbRequestProcessor.ProcessRequest(updateTicket, String.Format(taxRate, tax));
-
-                        string strResponseUpdate = qbRequestProcessor.ProcessRequest(updateTicket, "<?xml version=\"1.0\"?><?qbxml version=\"5.0\"?><QBXML><QBXMLMsgsRq onError=\"stopOnError\"><InvoiceModRq requestID=\"1\"><InvoiceMod><TxnID>2B32E-1734258201</TxnID><EditSequence>1734258201</EditSequence><ItemSalesTaxRef><FullName>Tax Calculated on Invoice</FullName></ItemSalesTaxRef><InvoiceLineMod><TxnLineID>2B330-1734258201</TxnLineID></InvoiceLineMod><InvoiceLineMod><TxnLineID>-1</TxnLineID><ItemRef><FullName>SmartCalc</FullName></ItemRef><Amount>0.00</Amount></InvoiceLineMod></InvoiceMod></InvoiceModRq></QBXMLMsgsRq></QBXML>");
-                        //Console.WriteLine(strResponseUpdate);
-                        qbRequestProcessor.EndSession(updateTicket);
-                        qbRequestProcessor.CloseConnection();
+                        Console.WriteLine(tax);
+                      
 
                     }
                     catch (Exception ex)
@@ -713,8 +745,8 @@ public class SmartCalcConnect
             catch (Exception ex)
             {
                 //Console.WriteLine("Error while registering for QB events - " + ex.Message);
-
-                qbRequestProcessor = null;
+  
+              
 
                 return;
             }
@@ -794,7 +826,7 @@ public class SmartCalcConnect
             invoiceLineMod2.AppendChild(amountElement);
 
 
-            LogXmlData(@"C:\Temp\InvoiceUpdateQuery.xml", doc.OuterXml);
+            LogXmlData(@"InvoiceUpdateQuery.xml", doc.OuterXml);
             return doc.OuterXml;
         }
          static string GetInvoiceTaxUpdateXML(string invoiceNumber, decimal tax)
@@ -824,7 +856,7 @@ public class SmartCalcConnect
             XmlElement lineItem = qbXMLDoc.CreateElement("IncludeLineItems");
             invoiceQueryRq.AppendChild(lineItem);
             lineItem.InnerText = "true";
-            LogXmlData(@"C:\Temp\InvoiceQuery.xml", qbXMLDoc.OuterXml);
+            LogXmlData(@"InvoiceQuery.xml", qbXMLDoc.OuterXml);
             return qbXMLDoc.OuterXml;
         }
     } }

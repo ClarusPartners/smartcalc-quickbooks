@@ -20,20 +20,14 @@
 
   <ItemGroup>
     <PackageReference Include="AddressParser" Version="1.0.3" />
+    <PackageReference Include="Interop.QBFC15" Version="1.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="RestSharp" Version="108.0.3" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\Program Files\Intuit\IDN\QBSDK16.0\samples\qbdt\c-sharp\qbXML\SubscribeAndHandleQBEvent_vs15\SubscribeAndHandleQBEvent.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Interop.QBFC16">
-      <HintPath>..\..\..\..\..\..\Program Files\Common Files\Intuit\QuickBooks\Interop.QBFC16.dll</HintPath>
-    </Reference>
     <Reference Include="Interop.QBXMLRP2">
-      <HintPath>..\..\..\..\..\..\Program Files\Common Files\Intuit\QuickBooks\Interop.QBXMLRP2.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\windows\Microsoft.Net\assembly\GAC_MSIL\Interop.QBXMLRP2\v4.0_27.0.3.0__8244b228ecdaef5e\Interop.QBXMLRP2.dll</HintPath>
     </Reference>
   </ItemGroup>
 

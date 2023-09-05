@@ -1,4 +1,4 @@
-﻿using Interop.QBFC16;
+﻿using Interop.QBFC15;
 using Interop.QBXMLRP2;
 using Newtonsoft.Json;
 using RestSharp;
@@ -6,52 +6,120 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Web;
 using System.Windows.Forms;
 using System.Xml;
 
 namespace SubscribeAndHandleQBEvent
 {
+    internal struct Taxpayer
+    {
+
+        public string TaxPayerName { get;set ; }
+        public string StreetAddress1 { get;set ; }
+        public string StreetAddress2 { get;set ; }
+        public string City { get;set ; }
+        public string Zip {get;set ;}
+        public string State { get;set ;}
+        public string County { get;set ; }
+        public string Country { get;set ; }    
+    }
     internal class SmartCalcHandler
     {
         
 
         public SmartCalcHandler()
         {
-            if (File.Exists("config.txt"))
+            var dir = Application.StartupPath;
+            var configPath = Application.StartupPath + @"\config.txt";
+            if (File.Exists(configPath))
             {
-                using (StreamReader reader = new StreamReader("config.txt"))
+                try
                 {
-                    string line;
-                    while ((line = reader.ReadLine()) != null)
+                    Taxpayer newtaxpayer = new Taxpayer();
+                    using (StreamReader reader = new StreamReader(configPath))
                     {
-                        string[] parts = line.Split('=');
-                        switch (parts[0])
+                        string line;
+                        while ((line = reader.ReadLine()) != null)
                         {
-                            case "Username":
-                                this.username = parts[1];
-                                break;
-                            case "Password":
-                                this.password = parts[1];
-                                break;
-                            case "Endpoint":
-                                this.endpoint = parts[1];
-                                break;
+                            string[] parts = line.Split('=');
+                            switch (parts[0])
+                            {
+                                case "Username":
+                                    this.username = parts[1];
+                                    break;
+                                case "Password":
+                                    this.password = parts[1];
+                                    break;
+                                case "Endpoint":
+                                    this.endpoint = parts[1];
+                                    break;
+                                case "Taxpayer":
+                                    newtaxpayer.TaxPayerName = parts[1];
+                                    break;
+                                case "StreetAddress1":
+                                    newtaxpayer.StreetAddress1 = parts[1];
+                                    break;
+                                case "StreetAddress2":
+                                    newtaxpayer.StreetAddress2 = parts[1];
+                                    break;
+                                case "Zip":
+                                    newtaxpayer.Zip = parts[1];
+                                    break;
+                                case "State":
+                                    newtaxpayer.State = parts[1];
+                                    break;
+                                case "City":
+                                    newtaxpayer.City = parts[1];
+                                    break;
+                                case "County":
+                                    newtaxpayer.County = parts[1];
+                                    break;
+                                case "Country":
+                                    newtaxpayer.Country = parts[1];
+                                    break;
+                            }
                         }
+                        this.taxpayer = newtaxpayer;
+
                     }
                 }
-            }
-        }
-    
+                catch (Exception ex)
+                {
+                    using (StreamWriter writer = new StreamWriter(@"C:\Temp\TaxpayerCreateException.TXT"))
+                    {
+                        writer.WriteLine(ex.Message);
+                        writer.WriteLine(ex.Data);
+                        writer.WriteLine(ex.InnerException);
+                        writer.WriteLine(ex.StackTrace);
 
-        private string username { get; set; }
-        private string password { get; set; }
+
+
+                    }
+                }
+                
+            }
+            else
+            {
+                using (StreamWriter writer = new StreamWriter(@"C:\Temp\ConfigFileNotFound.TXT"))
+                { 
+
+                }
+
+            }
+       
+        }
+        public string username { get; set; }
+        protected string password { get; set; }
         private string endpoint { get; set; }
-        
-        
+        private Taxpayer taxpayer { get; set; }
+
+
         private static void LogXmlData(string strFile, string strXML)
         {
             System.IO.StreamWriter sw = new System.IO.StreamWriter(strFile);
@@ -133,7 +201,7 @@ namespace SubscribeAndHandleQBEvent
                 using (StreamWriter writer = new StreamWriter(@"C:\Temp\InvoiceQueryUpdateResponse.TXT"))
                 {
                     writer.WriteLine(ex.Message);
-                }
+                } 
                 qbRequestProcessor = null;
                 throw ex;
             }
@@ -173,23 +241,34 @@ namespace SubscribeAndHandleQBEvent
             XmlDocument xmlResponse = new XmlDocument();
             xmlResponse.LoadXml(response);
             XmlNodeList invoiceNodes = xmlResponse.GetElementsByTagName("InvoiceRet");
-
+            XmlNodeList customerNode = xmlResponse.GetElementsByTagName("CustomerRef");
+            int i = 1;
             foreach (XmlNode invoiceNode in invoiceNodes)
             {
+                string dest_street;
                 XmlNodeList lineNodes = invoiceNode.SelectNodes("InvoiceLineRet");
+                if (invoiceNode.SelectSingleNode("ShipAddress/Addr1").InnerText != customerNode[0].SelectSingleNode("FullName").InnerText)
+                {
+                    dest_street = invoiceNode.SelectSingleNode("ShipAddress/Addr1").InnerText;
+                }
+                else
+                {
+                    dest_street = invoiceNode.SelectSingleNode("ShipAddress/Addr2").InnerText;
+                }
 
                 foreach (XmlNode lineNode in lineNodes)
                 {
                     InvoiceLine invoiceLine = new InvoiceLine
                     {
-                        invoice_line = lineNode.SelectSingleNode("ItemRef/ListID")?.InnerText ?? "",
+                        invoice_line = i.ToString(),
                         so_no = invoiceNode.SelectSingleNode("PONumber")?.InnerText ?? "",
                         quantity = decimal.Parse(lineNode.SelectSingleNode("Quantity")?.InnerText ?? "0"),
                         sales_amount = decimal.Parse(lineNode.SelectSingleNode("Amount")?.InnerText ?? "0"),
                         discount_type = lineNode.SelectSingleNode("DiscountLineRet/DiscountLineType")?.InnerText ?? "",
                         discount_value = decimal.Parse(lineNode.SelectSingleNode("DiscountLineRet/DiscountLineAmount")?.InnerText ?? "0"),
                         sales_tax_invoice = decimal.Parse(lineNode.SelectSingleNode("SalesTaxLineRet/SalesTaxPercent")?.InnerText ?? "0"),
-                        destination_street = invoiceNode.SelectSingleNode("ShipAddress/Addr1")?.InnerText ?? "",
+                        destination_street = dest_street,
+                     //   destination_street = "123 abc st."+ customerNode[0].SelectSingleNode("FullName").InnerText,
                         destination_city = invoiceNode.SelectSingleNode("ShipAddress/City")?.InnerText ?? "",
                         destination_state = invoiceNode.SelectSingleNode("ShipAddress/State")?.InnerText ?? "",
                         destination_zip = invoiceNode.SelectSingleNode("ShipAddress/PostalCode")?.InnerText ?? "",
@@ -203,7 +282,12 @@ namespace SubscribeAndHandleQBEvent
                         usage_code = lineNode.SelectSingleNode("SalesItemLineRet/ItemRef/ListID")?.InnerText ?? "",
                     };
 
+                    using (StreamWriter writer = new StreamWriter(@"C:\Temp\AfterInvoiceLine.TXT"))
+                    {
+                        writer.WriteLine(response);
+                    }
                     invoiceLines.Add(invoiceLine);
+                    i++;
                 }
             }
 
@@ -211,10 +295,7 @@ namespace SubscribeAndHandleQBEvent
         }
         public async Task<decimal> GetSalesTaxFromSmartCalcAsync(string invoice)
         {
-            using (StreamWriter writer = new StreamWriter(@"C:\Temp\hi.TXT"))
-            {
-                writer.WriteLine(invoice);
-            }
+         
             using (var client = new HttpClient())
             {
                 // Set the base address of the API
@@ -283,19 +364,19 @@ namespace SubscribeAndHandleQBEvent
                         offset = "0",
                         invoice_general = new
                         {
-                            taxpayer = "MSW Consulting LLC",
+                            taxpayer = this.taxpayer,
                             customer_no = invoiceNodes[0].SelectSingleNode("ListID")?.InnerText??"",
-                            invoice_no = Guid.NewGuid().ToString(),
+                            invoice_no = xmlResponse.GetElementsByTagName("RefNumber")[0].InnerText??Guid.NewGuid().ToString(),
                             invoice_date = DateTime.Now.ToString("MM/dd/yyyy"),
                             transaction_date = DateTime.Now.ToString("MM/dd/yyyy"),
                             document_type = "SI",
-                            origin_street = "5828 Zarley St Suite A",
-                            origin_city = "New Albany",
-                            origin_state = "OH",
-                            origin_zip = "43054",
-                            origin_county = "New Albany",
-                            origin_country = "United States",
-                            shipping_amt = "0"
+                            origin_street = taxpayer.StreetAddress1 ?? "",
+                            origin_city = taxpayer.City ?? "",
+                            origin_state = taxpayer.State,
+                            origin_zip = taxpayer.Zip,
+                            origin_county = taxpayer.County,
+                            origin_country = taxpayer.Country,
+                            shipping_amt = ""
                         },
                         invoice_line = JsonConvert.SerializeObject(ParseInvoiceResponse(invoice))
             
@@ -310,8 +391,7 @@ namespace SubscribeAndHandleQBEvent
                         writer.WriteLine(invoicequeryURL);
                     }
                     RestResponse INVresponse = invoiceClient.Execute(request);
-                    //Console.WriteLine(INVresponse.Content);
-                    var document = JsonDocument.Parse(INVresponse.Content);
+                     var document = JsonDocument.Parse(INVresponse.Content);
                     using (StreamWriter writer = new StreamWriter(@"C:\Temp\InvrespJson.TXT"))
                     {
                         writer.WriteLine(document.ToString());
@@ -345,9 +425,10 @@ namespace SubscribeAndHandleQBEvent
                 client.BaseAddress = new Uri("http://mswsmartcalc.suchimsapps.com/");
                 using (StreamWriter writer = new StreamWriter(@"C:\Temp\stc.TXT"))
                 {
+                    writer.WriteLine("INVOICE CHECK**********");
                     writer.WriteLine(invoice);
                 }
-
+               
                 try
                 {
 
@@ -360,6 +441,10 @@ namespace SubscribeAndHandleQBEvent
 
                     // var rclient = new RestClient("http://mswsmartcalc.suchimsapps.com/service/v4_1/rest.php?method=auth_token&input_type=JSON&response_type=JSON&rest_data={\"user_auth\":{\"user_name\":\"qbapi\",\"password\":\"f15df058bee598625a2762554488d903\",\"version\":\"1\"},\"application_name\":\"Smart-Calc\",\"name_value_list\":[\"user_id\"]}");
                     var rclient = new RestClient(authURL);
+                    using (StreamWriter writer = new StreamWriter(@"C:\Temp\url.TXT"))
+                    {
+                        writer.WriteLine(authURL);
+                    }
                     // rclient.Timeout = -1; 
                     var request = new RestRequest();
 
@@ -413,27 +498,30 @@ namespace SubscribeAndHandleQBEvent
                         offset = "0",
                         invoice_general = new
                         {
-                            taxpayer = "MSW Consulting LLC",
+                            taxpayer =taxpayer.TaxPayerName,
                             customer_no = invoiceNodes[0].SelectSingleNode("ListID")?.InnerText ?? "",
-                            invoice_no = Guid.NewGuid().ToString(),
+                            invoice_no = xmlResponse.GetElementsByTagName("RefNumber")[0].InnerText ?? Guid.NewGuid().ToString(),
                             invoice_date = DateTime.Now.ToString("MM/dd/yyyy"),
                             transaction_date = DateTime.Now.ToString("MM/dd/yyyy"),
                             document_type = "SI",
-                            origin_street = "5828 Zarley St Suite A",
-                            origin_city = "New Albany",
-                            origin_state = "OH",
-                            origin_zip = "43054",
-                            origin_county = "New Albany",
-                            origin_country = "United States",
+                            origin_street = taxpayer.StreetAddress1 ?? "",
+                            origin_city = taxpayer.City ?? "",
+                            origin_state = taxpayer.State ?? "",
+                            origin_zip = taxpayer.Zip ?? "",
+                            origin_county = taxpayer.County ?? "",
+                            origin_country = taxpayer.Country ?? "",
                             shipping_amt = "0"
                         },
                         invoice_line = ParseInvoiceResponse(invoice)
 
                     };
-
-                    string invoiceJson = JsonConvert.SerializeObject(jsonObject, Newtonsoft.Json.Formatting.Indented);
+                    using (StreamWriter writer = new StreamWriter(@"C:\Temp\AfterJSONCreation.TXT"))
+                    {
+                        writer.WriteLine(jsonObject.ToString());
+                    }
+                    string invoiceJson = HttpUtility.UrlEncode(JsonConvert.SerializeObject(jsonObject, Newtonsoft.Json.Formatting.Indented));
                     //Console.WriteLine(invoiceJson);
-                    var invoicequeryURL = String.Format(baseURI, "tax_calculation", "JSON", "JSON", invoiceJson);
+                    var invoicequeryURL =String.Format(baseURI, "tax_calculation", "JSON", "JSON", invoiceJson);
                     using (StreamWriter writer = new StreamWriter(@"C:\Temp\SCRespURL.TXT"))
                     {
                         writer.WriteLine(invoicequeryURL);
@@ -457,7 +545,11 @@ namespace SubscribeAndHandleQBEvent
                 catch (Exception ex)
                 {
 
-                    //Console.WriteLine("Error: " + ex.Message + " GetSalesTaxFromSmartCalc(string invoice) ");
+                    using (StreamWriter writer = new StreamWriter(@"C:\Temp\ExceptionInTaxCalc.TXT"))
+                    {
+                        
+                        writer.WriteLine(ex.Message.ToString());
+                    }
                     return 0m;
                 }
             }

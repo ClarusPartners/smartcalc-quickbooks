@@ -28,11 +28,11 @@ namespace SmartCalc
 
         public EventHandlerObj()
         {
-            MessageBox.Show("Mechanism");
+           
             // ReferenceCountedObjectBase constructor will be invoked.
             //Console.WriteLine("EventHandlerObj constructor.");
 
-            System.IO.StreamWriter sw = new System.IO.StreamWriter(@"C:\Temp\log.txt");
+           
 
         }
      
@@ -54,14 +54,13 @@ namespace SmartCalc
             {
 
                 decimal taxRate = smartCalc.GetSalesTaxFromSmartCalc(invoice);
-                MessageBox.Show(taxRate.ToString()); ;
                 string updateXML = SmartCalcHandler.GenerateInvoiceTaxUpdateXML(invoice, taxRate);
                 SmartCalcHandler.UpdateInvoice(updateXML);
             }
             else
             {
 
-                MessageBox.Show(invoice);
+                
 
                 //QueueInvoiceForSmartCalcProcessing(refNumber);
             }
@@ -105,8 +104,12 @@ namespace SmartCalc
                 StringBuilder sb = new StringBuilder(strMessage);
                 XmlDocument outputXMLDoc = new XmlDocument();
                 outputXMLDoc.LoadXml(strMessage);
+                using (StreamWriter writer = new StreamWriter(@"C:\Temp\QuickBooksEvent.TXT"))
+                {
+                    writer.WriteLine(strMessage);
+                }
                 //MessageBox.Show("XMLDocumentProcessingStop");
-               // MessageBox.Show(outputXMLDoc.OuterXml);
+                // MessageBox.Show(outputXMLDoc.OuterXml);
                 XmlNodeList qbXMLMsgsRsNodeList = outputXMLDoc.GetElementsByTagName("QBXMLEvents");
                 XmlNode childNode = qbXMLMsgsRsNodeList.Item(0).FirstChild;
                 
@@ -117,7 +120,7 @@ namespace SmartCalc
                 {
                     
                     case "DataEvent":
-                        MessageBox.Show(strMessage);
+                       
                         //Handle Data Event Here
                         if (!strMessage.Contains("Modify"))
                         {
@@ -135,7 +138,7 @@ namespace SmartCalc
                         }
                         else
                         {
-                            MessageBox.Show(strMessage);
+                           
 
                         }
                         break;
@@ -153,7 +156,7 @@ namespace SmartCalc
                         break;
 
                     default:
-                        MessageBox.Show(sb.ToString(), "Response From QB");
+                     //   MessageBox.Show(sb.ToString(), "Response From QB");
                         break;
                 }
 

@@ -115,8 +115,8 @@ namespace SmartCalc
     class SmartCalc
     {
 
-        enum QBSubscriptionType { Data, UI, UIExtension };
-        static string strAppName = "SmartCalc";
+        enum QBSubscriptionType { CustomerData, InvoiceData, CustomerCertUI, UIExtension };
+        static string strAppName = "AkuCalc";
 
         // CoInitializeEx() can be used to set the apartment model
         // of individual threads.
@@ -360,7 +360,7 @@ namespace SmartCalc
                             if (key2 != null)
                                 key2.Close();
                             //unsubscribe from QB events
-                            UnsubscribeForEvents(QBSubscriptionType.Data, true); // don't display error 
+                            UnsubscribeForEvents(QBSubscriptionType.InvoiceData, true); // don't display error 
                             UnsubscribeForEvents(QBSubscriptionType.UIExtension, true); // don't display error 
                         }
                         bRet = false;
@@ -370,9 +370,24 @@ namespace SmartCalc
                     case "-d":
                     case "/d":
                         //Subscribe for Quick Books Data Event - Customer add/Modify/Delete event, if not already subscribed
-                        SubscribeForEvents(QBSubscriptionType.Data, String.Empty);
+                        SubscribeForEvents(QBSubscriptionType.InvoiceData, String.Empty);
                         bRet = false;
                         break;
+
+                    case "-c":
+                    case "/c":
+                        //Subscribe for Quick Books Data Event - Customer add/Modify/Delete event, if not already subscribed
+                        SubscribeForEvents(QBSubscriptionType.CustomerData, String.Empty);
+                        bRet = false;
+                        break;
+
+                    case "-cert":
+                    case "/cert":
+                        //Subscribe for Quick Books Data Event - Customer add/Modify/Delete event, if not already subscribed
+                        SubscribeForEvents(QBSubscriptionType.CustomerCertUI, args[1]);
+                        bRet = false;
+                        break;
+
 
                     //subscribing for UI Extension Event
                     case "-u":
@@ -398,7 +413,7 @@ namespace SmartCalc
                     case "-dd":
                     case "/dd":
                         //unsubscribe for Quick Books Data Event
-                        UnsubscribeForEvents(QBSubscriptionType.Data, false);
+                        UnsubscribeForEvents(QBSubscriptionType.InvoiceData, false);
                         bRet = false;
                         break;
 
@@ -446,8 +461,11 @@ namespace SmartCalc
                 StringBuilder strRequest = new StringBuilder();
                 switch (strType)
                 {
-                    case QBSubscriptionType.Data:
+                    case QBSubscriptionType.InvoiceData:
                         strRequest = new StringBuilder(GetDataEventSubscriptionAddXML());
+                        break;
+                    case QBSubscriptionType.CustomerData:
+                        strRequest = new StringBuilder(GetCustomerDataEventSubscriptionAddXML());
                         break;
 
                     case QBSubscriptionType.UIExtension:
@@ -581,12 +599,128 @@ namespace SmartCalc
             txnEventSubscription.AppendChild(requestXMLDoc.CreateElement("TxnEventOperation")).InnerText = "Delete";
 
             string strRetString = requestXMLDoc.OuterXml;
-            LogXmlData(@"C:\Temp\DataEvent.xml", strRetString);
+            LogXmlData(@"DataEvent.xml", strRetString);
+            return strRetString;
+
+        }
+        private static string GetCustomerDataEventSubscriptionAddXML()
+        {
+            //Create the qbXML request
+            XmlDocument requestXMLDoc = new XmlDocument();
+            requestXMLDoc.AppendChild(requestXMLDoc.CreateXmlDeclaration("1.0", null, null));
+            requestXMLDoc.AppendChild(requestXMLDoc.CreateProcessingInstruction("qbxml", "version=\"5.0\""));
+            XmlElement qbXML = requestXMLDoc.CreateElement("QBXML");
+            requestXMLDoc.AppendChild(qbXML);
+
+            //subscription Message request
+            XmlElement qbXMLMsgsRq = requestXMLDoc.CreateElement("QBXMLSubscriptionMsgsRq");
+            qbXML.AppendChild(qbXMLMsgsRq);
+
+            //Data Event Subscription ADD request
+            XmlElement dataEventSubscriptionAddRq = requestXMLDoc.CreateElement("DataEventSubscriptionAddRq");
+            qbXMLMsgsRq.AppendChild(dataEventSubscriptionAddRq);
+
+
+            //Data Event Subscription ADD
+            XmlElement dataEventSubscriptionAdd = requestXMLDoc.CreateElement("DataEventSubscriptionAdd");
+            dataEventSubscriptionAddRq.AppendChild(dataEventSubscriptionAdd);
+
+            //Add Subscription ID
+            dataEventSubscriptionAdd.AppendChild(requestXMLDoc.CreateElement("SubscriberID")).InnerText = "{8327c7fc-7f05-41ed-a5b4-b6618bb27bf1}";
+
+            //Add COM CallbackInfo
+            XmlElement comCallbackInfo = requestXMLDoc.CreateElement("COMCallbackInfo");
+            dataEventSubscriptionAdd.AppendChild(comCallbackInfo);
+
+            //Appname and CLSID
+            comCallbackInfo.AppendChild(requestXMLDoc.CreateElement("AppName")).InnerText = strAppName;
+            comCallbackInfo.AppendChild(requestXMLDoc.CreateElement("CLSID")).InnerText = "{62447F81-C195-446f-8201-94F0614E49D5}";
+
+            //Delivery Policy
+            dataEventSubscriptionAdd.AppendChild(requestXMLDoc.CreateElement("DeliveryPolicy")).InnerText = "DeliverAlways";
+
+            //track lost events
+            dataEventSubscriptionAdd.AppendChild(requestXMLDoc.CreateElement("TrackLostEvents")).InnerText = "All";
+
+
+            //  ListEventSubscription
+            XmlElement txnEventSubscription = requestXMLDoc.CreateElement("TxnEventSubscription");
+            dataEventSubscriptionAdd.AppendChild(txnEventSubscription);
+
+            //Add Customer List and operations
+            txnEventSubscription.AppendChild(requestXMLDoc.CreateElement("TxnEventType")).InnerText = "Customer";
+            txnEventSubscription.AppendChild(requestXMLDoc.CreateElement("TxnEventOperation")).InnerText = "Add";
+            txnEventSubscription.AppendChild(requestXMLDoc.CreateElement("TxnEventOperation")).InnerText = "Modify";
+            txnEventSubscription.AppendChild(requestXMLDoc.CreateElement("TxnEventOperation")).InnerText = "Delete";
+
+            string strRetString = requestXMLDoc.OuterXml;
+            LogXmlData(@"DataEvent.xml", strRetString);
             return strRetString;
 
         }
 
+        private static string GetAkuCertExtensionSubscriptionAddXML(string strMenuName)
+        {
+            //Create the qbXML request
+            XmlDocument requestXMLDoc = new XmlDocument();
+            requestXMLDoc.AppendChild(requestXMLDoc.CreateXmlDeclaration("1.0", null, null));
+            requestXMLDoc.AppendChild(requestXMLDoc.CreateProcessingInstruction("qbxml", "version=\"5.0\""));
+            XmlElement qbXML = requestXMLDoc.CreateElement("QBXML");
+            requestXMLDoc.AppendChild(qbXML);
 
+            //subscription Message request
+            XmlElement qbXMLMsgsRq = requestXMLDoc.CreateElement("QBXMLSubscriptionMsgsRq");
+            qbXML.AppendChild(qbXMLMsgsRq);
+
+            //UI Extension Subscription ADD request
+            XmlElement uiExtSubscriptionAddRq = requestXMLDoc.CreateElement("UIExtensionSubscriptionAddRq");
+            qbXMLMsgsRq.AppendChild(uiExtSubscriptionAddRq);
+
+
+            //UI Extension Subscription ADD
+            XmlElement uiExtEventSubscriptionAdd = requestXMLDoc.CreateElement("UIExtensionSubscriptionAdd");
+            uiExtSubscriptionAddRq.AppendChild(uiExtEventSubscriptionAdd);
+
+            //Add Subscription ID
+            uiExtEventSubscriptionAdd.AppendChild(requestXMLDoc.CreateElement("SubscriberID")).InnerText = "{8327c7fc-7f05-41ed-a5b4-b6618bb27bf1}";
+
+            //Add COM CallbackInfo
+            XmlElement comCallbackInfo = requestXMLDoc.CreateElement("COMCallbackInfo");
+            uiExtEventSubscriptionAdd.AppendChild(comCallbackInfo);
+
+            //Appname and CLSID
+            comCallbackInfo.AppendChild(requestXMLDoc.CreateElement("AppName")).InnerText = strAppName;
+            comCallbackInfo.AppendChild(requestXMLDoc.CreateElement("CLSID")).InnerText = "{62447F81-C195-446f-8201-94F0614E49D5}";
+
+
+            //  MenuEventSubscription
+            XmlElement menuExtensionSubscription = requestXMLDoc.CreateElement("MenuExtensionSubscription");
+            uiExtEventSubscriptionAdd.AppendChild(menuExtensionSubscription);
+
+            //Add To menu Item // To Cusomter Menu
+            menuExtensionSubscription.AppendChild(requestXMLDoc.CreateElement("AddToMenu")).InnerText = "Customer";
+
+
+            XmlElement menuItem = requestXMLDoc.CreateElement("MenuItem");
+            menuExtensionSubscription.AppendChild(menuItem);
+
+            //Add Menu Name
+            menuItem.AppendChild(requestXMLDoc.CreateElement("MenuText")).InnerText = strMenuName;
+            menuItem.AppendChild(requestXMLDoc.CreateElement("EventTag")).InnerText = "menu_" + strMenuName;
+
+
+            XmlElement displayCondition = requestXMLDoc.CreateElement("DisplayCondition");
+            menuItem.AppendChild(displayCondition);
+
+            displayCondition.AppendChild(requestXMLDoc.CreateElement("VisibleIf")).InnerText = "HasCustomers";
+            displayCondition.AppendChild(requestXMLDoc.CreateElement("EnabledIf")).InnerText = "HasCustomers";
+
+
+            string strRetString = requestXMLDoc.OuterXml;
+            LogXmlData(@"UIExtension.xml", strRetString);
+            return strRetString;
+
+        }
 
         // This Method return the qbXML for the Adding a UI extension to the customer menu.
         // Event will be received any time the menu is clicked 
@@ -648,7 +782,7 @@ namespace SmartCalc
 
 
             string strRetString = requestXMLDoc.OuterXml;
-            LogXmlData(@"C:\Temp\UIExtension.xml", strRetString);
+            LogXmlData(@"UIExtension.xml", strRetString);
             return strRetString;
 
         }
@@ -680,7 +814,7 @@ namespace SmartCalc
 
 
             string strRetString = requestXMLDoc.OuterXml;
-            LogXmlData(@"C:\Temp\Unsubscribe.xml", strRetString);
+            LogXmlData(@"Unsubscribe.xml", strRetString);
             return strRetString;
 
         }
@@ -690,7 +824,9 @@ namespace SmartCalc
         // strFile Name should have complete Path of the file too
         private static void LogXmlData(string strFile, string strXML)
         {
-            System.IO.StreamWriter sw = new System.IO.StreamWriter(strFile);
+            string path = Directory.GetCurrentDirectory();
+            string filepath = Path.Combine(path, strFile);
+            System.IO.StreamWriter sw = new System.IO.StreamWriter(filepath);
             sw.WriteLine(strXML);
             sw.Flush();
             sw.Close();
@@ -739,6 +875,7 @@ namespace SmartCalc
         [STAThread]
         static void Main(string[] args)
         {
+           
 
                 try
                 {
