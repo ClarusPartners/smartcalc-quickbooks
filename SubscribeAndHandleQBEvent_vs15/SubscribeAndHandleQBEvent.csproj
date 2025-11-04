@@ -118,18 +118,6 @@
     <DocumentationFile>..\Release\SmartCalc.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-<<<<<<< HEAD
-    <Reference Include="AddressParser, Version=1.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\..\..\..\..\..\..\..\Users\KhayyamZubair\source\repos\smartcalc-quickbooks\packages\AddressParser.1.0.3\lib\net461\AddressParser.dll</HintPath>
-    </Reference>
-    <Reference Include="Interop.QBFC16, Version=16.0.0.1, Culture=neutral, PublicKeyToken=31d8aec643e18259, processorArchitecture=MSIL">
-      <HintPath>..\packages\Interop.QBFC16.16.0.0.1\lib\Interop.QBFC16.dll</HintPath>
-=======
-    <Reference Include="Interop.QBFC15, Version=15.0.0.1, Culture=neutral, PublicKeyToken=31d8aec643e18259, processorArchitecture=MSIL">
-      <HintPath>..\packages\Interop.QBFC15.1.0.1\lib\Interop.QBFC15.dll</HintPath>
->>>>>>> CustomerExemptions
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
     <Reference Include="Interop.QBXMLRP2">
       <Name>Interop.QBXMLRP2</Name>
       <HintPath>C:\Program Files\Common Files\Intuit\QuickBooks\Interop.QBXMLRP2.dll</HintPath>
@@ -228,6 +216,7 @@
     </Compile>
     <None Include="bin\x64\Release\AkuCalc.jpg" />
     <Content Include="Readme.txt" />
+    <None Include="SubscribeAndHandleQBEvent_vs15.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -258,6 +247,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SplashScreen.resx">
       <DependentUpon>SplashScreen.cs</DependentUpon>
